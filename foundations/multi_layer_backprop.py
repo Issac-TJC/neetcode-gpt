@@ -27,21 +27,23 @@ class Solution:
 
         # forward
         z1 = x @ W1.T + b1
-        a1 = np.maximum(0, z1) # relu
+        a1 = np.maximum(0, z1)
         z2 = a1 @ W2.T + b2
-        loss = np.mean(np.square(z2 - y_true))
+        loss = np.mean(np.square(y_true - z2)) # loss = 1/n sum((z2_i - y_i)^2)
 
-        # back
+        # backward
         n = len(y_true) if y_true.ndim > 0 else 1
-        dz2 = 2 * (z2 - y_true) / n  # dL/dz2
-        dW2 = dz2.reshape(-1, 1) @ a1.reshape(1, -1)  # dL/dW2
-        db2 = dz2                      # dL/db2
+        dz2 = 2 * (z2 - y_true) / n # dL/dz2_i
+        # dL/dW2= dL/dz2 * dz2/dW2, z2(1,output), a1(1,hidden),W2(output,hidden)
+        dW2 = dz2.reshape(-1,1) @ a1.reshape(1,-1)
+        db2 = dz2
 
-        da1 = dz2.reshape(1, -1) @ W2  # dL/da1
-        da1 = da1.flatten()
-        dz1 = da1 * (z1 > 0).astype(float)  # relu'
-        dW1 = dz1.reshape(-1, 1) @ x.reshape(1, -1)  # dL/dW1
-        db1 = dz1                      # dL/db1
+        # a1(1,hidden),z2(1,output),W2(output,hidden)
+        da1 = dz2.reshape(1,-1) @ W2 # da1(1,hidden)
+        da1 = da1.flatten() # da1(hidden,)
+        dz1 = da1 * (z1 > 0).astype(float) # relu'
+        dW1 = dz1.reshape(-1,1) @ x.reshape(1,-1)
+        db1 = dz1
 
         return {
             'loss': round(float(loss), 4),
